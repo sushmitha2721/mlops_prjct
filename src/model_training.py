@@ -202,7 +202,7 @@ def save_model(model, model_type: str, output_dir: str = "models") -> str:
         model_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = int(time())
-        model_path = model_dir / f"{model_type}_model_{timestamp}.pkl"
+        model_path = model_dir / f"{model_type}_model.pkl"
         
         with open(model_path, 'wb') as f:
             pickle.dump(model, f)

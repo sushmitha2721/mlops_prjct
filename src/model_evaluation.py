@@ -40,21 +40,27 @@ def load_test_data(data_dir: str) -> Tuple[csr_matrix, np.ndarray]:
     except Exception as e:
         logger.error(f"Failed to load test data: {str(e)}")
         raise
-
 def load_models(models_dir: str = "models") -> Dict[str, Any]:
     """Load all trained models from directory"""
     try:
-        logger.info(f"Loading models from {models_dir}")
-        models = {}
+        models_dir_path = Path(models_dir).absolute()  # Get absolute path
+        logger.info(f"Loading models from {models_dir_path}")
         
-        for model_file in Path(models_dir).glob('*.pkl'):
+        # Verify directory exists
+        if not models_dir_path.exists():
+            raise FileNotFoundError(f"Models directory not found: {models_dir_path}")
+        
+        models = {}
+        model_files = list(models_dir_path.glob('*.pkl'))
+        
+        if not model_files:
+            raise FileNotFoundError(f"No .pkl files found in {models_dir_path}")
+        
+        for model_file in model_files:
             model_type = model_file.stem.split('_')[0]
             with open(model_file, 'rb') as f:
                 models[model_type] = pickle.load(f)
             logger.info(f"Loaded {model_type} model from {model_file}")
-        
-        if not models:
-            raise FileNotFoundError("No trained models found in directory")
             
         return models
         

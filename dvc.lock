@@ -1,0 +1,142 @@
+schema: '2.0'
+stages:
+  data_ingestion:
+    cmd: python src/data_ingestion.py
+    deps:
+    - path: experiments/spam.csv
+      hash: md5
+      md5: f10885f3e274a202196a88cb8bb3e15e
+      size: 499322
+    - path: src/data_ingestion.py
+      hash: md5
+      md5: 75e3b3c3a5521db88a983b7db6538edf
+      size: 6082
+    params:
+      params.yaml:
+        data_ingestion.random_state: 42
+        data_ingestion.test_size: 0.2
+    outs:
+    - path: data/raw/test.csv
+      hash: md5
+      md5: 77bfd4689a0c37a7c3b88abd725aca30
+      size: 102894
+    - path: data/raw/train.csv
+      hash: md5
+      md5: 8e00279331eb6f20bbee8c9430dbfcf8
+      size: 408710
+  data_preprocessing:
+    cmd: python src/data_preprocessing.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: b2b3b4e1f67b3bd57133baaa7792b4f8.dir
+      size: 511604
+      nfiles: 2
+    - path: src/data_preprocessing.py
+      hash: md5
+      md5: 1dfba1a968cfaaa817f0a734cbe780e7
+      size: 8921
+    params:
+      params.yaml:
+        data_preprocessing.text_clean_params:
+          lowercase: true
+          remove_urls: true
+    outs:
+    - path: data/processed/test_processed.csv
+      hash: md5
+      md5: bd654096a81ee5a0769cee7a29cf4f70
+      size: 246234
+    - path: data/processed/train_processed.csv
+      hash: md5
+      md5: 10c4f8b5f57749414a20ac109471532a
+      size: 974296
+  feature_engineering:
+    cmd: python src/feature_engineering.py
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: a4bdeb12ae2e1fcb9a965bd5dcb8b4a8.dir
+      size: 1220530
+      nfiles: 2
+    - path: src/feature_engineering.py
+      hash: md5
+      md5: 0912a0aad5cab1cc5e374825258f10fd
+      size: 10949
+    params:
+      params.yaml:
+        feature_engineering.max_features: 1000
+        feature_engineering.ngram_range:
+        - 1
+        - 2
+    outs:
+    - path: data/feature/X_test.npz
+      hash: md5
+      md5: 83f78d27bcb57389155520167e7e7f85
+      size: 83249
+    - path: data/feature/X_train.npz
+      hash: md5
+      md5: 14e4d2ba12b7f82b32d12f6c6e1a7e67
+      size: 334474
+    - path: data/feature/y_test.npy
+      hash: md5
+      md5: c70377a23aef788cc244a3fac03a501f
+      size: 9048
+    - path: data/feature/y_train.npy
+      hash: md5
+      md5: 878fba762610866e979f2bf09eaa805f
+      size: 35784
+  model_training:
+    cmd: python src/model_training.py
+    deps:
+    - path: data/feature
+      hash: md5
+      md5: 30195831ad383212b11e2b3448976569.dir
+      size: 462555
+      nfiles: 4
+    - path: src/model_training.py
+      hash: md5
+      md5: b67717703cbc737e2d1885094fc0fd05
+      size: 11089
+    params:
+      params.yaml:
+        model_training.logistic_params:
+          C: 1.0
+          max_iter: 1000
+          penalty: l2
+          solver: lbfgs
+        model_training.random_forest_params:
+          n_estimators: 100
+          max_depth: 20
+        model_training.svm_params:
+          C: 1.0
+          kernel: linear
+    outs:
+    - path: models/logistic_model.pkl
+      hash: md5
+      md5: 0e2b878ade2cf8b75cb03cf002c7551a
+      size: 8832
+    - path: models/random_forest_model.pkl
+      hash: md5
+      md5: c828bce778725b827e79e2257bf4e85b
+      size: 2027136
+    - path: models/svm_model.pkl
+      hash: md5
+      md5: db1eb072ec94e8268749cee1b2b422b3
+      size: 85779
+  model_evaluation:
+    cmd: python src/model_evaluation.py
+    deps:
+    - path: models
+      hash: md5
+      md5: 4f1ce9ae3e40d20d5ff00c876debc032.dir
+      size: 10591071
+      nfiles: 13
+    - path: src/model_evaluation.py
+      hash: md5
+      md5: 31c87245fca3512cfc7fb55b87ff9b3e
+      size: 6057
+    outs:
+    - path: results/evaluation_results.yaml
+      hash: md5
+      md5: d5d409131232b3526549a0b332a96a40
+      size: 547

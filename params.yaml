@@ -1,43 +1,27 @@
-# Global configuration
-project:
-  name: "spam_classification"
-  version: "1.0.0"
-
-# Data ingestion parameters
+# params.yaml
 data_ingestion:
-  data_path: "D:/Sushmitha/project_ds/mlops_prjct/experiments/spam.csv"
-  test_size: 0.2
+  test_size: 0.2  # Example value
   random_state: 42
-  output_dir: "./data"
 
-# Data preprocessing parameters
 data_preprocessing:
-  text_col: "message"
-  target_col: "target"
-  use_stemming: True
-  debug_mode: False
+  text_clean_params:
+    lowercase: true
+    remove_urls: true
 
-# Feature engineering parameters
 feature_engineering:
-  max_tfidf_features: 1000
+  max_features: 1000
   ngram_range: [1, 2]
-  output_dir: "./data/feature"
-  
+
 model_training:
-  data_dir: "data/feature"
-  random_state: 42
-  n_jobs: -1
-  
   logistic_params:
     C: 1.0
+    max_iter: 1000
     penalty: "l2"
     solver: "lbfgs"
     
   svm_params:
     C: 1.0
-    kernel: "linear"
-    tol: 1e-4
-    
+    kernel: linear
   random_forest_params:
     n_estimators: 100
     max_depth: 20
