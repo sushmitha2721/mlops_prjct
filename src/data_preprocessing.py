@@ -217,6 +217,8 @@ if __name__ == '__main__':
         os.makedirs('./data/processed', exist_ok=True)
         train_processed.to_csv('./data/processed/train_processed.csv', index=False)
         test_processed.to_csv('./data/processed/test_processed.csv', index=False)
+
+       
         
         logger.info("Pipeline completed successfully. Processed data saved to /data/processed/")
         

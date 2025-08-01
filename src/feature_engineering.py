@@ -9,6 +9,8 @@ import re
 from typing import Tuple, List
 from pathlib import Path
 from logger import setup_logging
+import os
+from scipy.sparse import save_npz, load_npz
 
 logger = setup_logging(logger_name="feature_engineering")
 
@@ -18,7 +20,7 @@ class FeatureEngineer:
         self.max_tfidf_features = max_tfidf_features
         self.ngram_range = ngram_range
         self.tfidf = None
-        self.scaler = StandardScaler()
+        self.scaler = None
         self.stemmer = PorterStemmer()
         self.stopwords = set(stopwords.words('english'))
         self.stemmed_stopwords = set(self.stemmer.stem(w) for w in stopwords.words('english'))
@@ -172,14 +174,11 @@ class FeatureEngineer:
             logger.info("Phase 2: Feature engineering")
             X_engineered = self._get_engineered_features(df)
             
-            # Feature scaling
-            logger.info("Phase 3: Feature scaling")
-            X_engineered_scaled = self.scaler.fit_transform(X_engineered)
-            logger.debug(f"Scaler fitted on {X_engineered.shape[0]} samples")
+            
             
             # Feature combination
-            logger.info("Phase 4: Feature combination")
-            combined = hstack([X_text, csr_matrix(X_engineered_scaled)])
+            logger.info("Phase 3: Feature combination")
+            combined = hstack([X_text, csr_matrix(X_engineered)])
             logger.info(
                 f"Feature combination complete. Final shape: {combined.shape}\n"
                 f"- Text features: {X_text.shape[1]}\n"
@@ -230,6 +229,10 @@ if __name__ == '__main__':
         logger.info(f"Loading test data from {test_path}")
         test = pd.read_csv(test_path)
         logger.info(f"Test data loaded. Shape: {test.shape}")
+
+        # Extract target variables
+        y_train = train['target'].values
+        y_test = test['target'].values
         
         # Null check
         logger.info("Checking for null values")
@@ -259,6 +262,18 @@ if __name__ == '__main__':
             f"- Train: {X_train.shape}\n"
             f"- Test: {X_test.shape}"
         )
+
+        #save results
+        os.makedirs('./data/feature',exist_ok=True)
+        # Save sparse matrices
+        save_npz('./data/feature/X_train.npz', X_train)  
+        save_npz('./data/feature/X_test.npz', X_test)
+        
+
+        #Save target variables
+        np.save('./data/feature/y_train.npy', y_train)
+        np.save('./data/feature/y_test.npy', y_test)
+        logger.info("Results saved in the folder")
         
     except Exception as e:
         logger.critical(
