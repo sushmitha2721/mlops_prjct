@@ -1,27 +1,60 @@
-# params.yaml
 data_ingestion:
-  test_size: 0.2  # Example value
+  test_size: 0.2
   random_state: 42
+  stratify: true
 
 data_preprocessing:
   text_clean_params:
     lowercase: true
     remove_urls: true
+    remove_stopwords: true
 
 feature_engineering:
   max_features: 1000
-  ngram_range: [1, 2]
+  ngram_range: [1, 3]
 
 model_training:
-  logistic_params:
-    C: 1.0
-    max_iter: 1000
-    penalty: "l2"
-    solver: "lbfgs"
-    
-  svm_params:
-    C: 1.0
-    kernel: linear
-  random_forest_params:
-    n_estimators: 100
-    max_depth: 20
+  grid_search:
+    cv: 5
+    scoring: "f1"
+    n_jobs: -1
+    verbose: 2
+    refit: true
+
+  logistic:
+    fixed_params:
+      C: 1.0
+      penalty: "l2"
+      solver: "sag"
+      max_iter: 2000
+      class_weight: "balanced"
+      random_state: 42
+    param_grid:
+      C: [0.001, 0.01, 0.1, 1, 10, 100]
+      penalty: ['l2', 'l1', 'elasticnet']
+      solver: ['lbfgs', 'liblinear', 'sag', 'saga']
+      l1_ratio: [0, 0.25, 0.5, 0.75, 1]
+  svm:
+    fixed_params:
+      C: 1.0
+      kernel: "linear"
+      probability: true
+      class_weight: "balanced"
+      random_state: 42
+    param_grid:
+      C: [1.0, 10.0, 30.0]
+      kernel: ["linear", "rbf"]
+      gamma: ["scale", "auto"]
+
+  random_forest:
+    fixed_params:
+      n_estimators: 50
+      max_depth: 10
+      min_samples_split: 5
+      class_weight: "balanced_subsample"
+      random_state: 42
+      n_jobs: -1
+    param_grid:
+      n_estimators: [10, 50, 100]
+      max_depth: [10, 20, None]
+      min_samples_split: [5, 50, 100]

@@ -1,1 +1,7 @@
 /evaluation_results.yaml
+/best_params_logistic.yaml
+/best_params_svm.yaml
+/best_params_random_forest.yaml
+/evaluation_summary.yaml
+/evaluation_summary.md
+/evaluation_results.json

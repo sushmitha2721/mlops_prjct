@@ -14,6 +14,7 @@ stages:
     params:
       params.yaml:
         data_ingestion.random_state: 42
+        data_ingestion.stratify: true
         data_ingestion.test_size: 0.2
     outs:
     - path: data/raw/test.csv
@@ -41,6 +42,7 @@ stages:
         data_preprocessing.text_clean_params:
           lowercase: true
           remove_urls: true
+          remove_stopwords: true
     outs:
     - path: data/processed/test_processed.csv
       hash: md5
@@ -67,7 +69,7 @@ stages:
         feature_engineering.max_features: 1000
         feature_engineering.ngram_range:
         - 1
-        - 2
+        - 3
     outs:
     - path: data/feature/X_test.npz
       hash: md5
@@ -95,48 +97,226 @@ stages:
       nfiles: 4
     - path: src/model_training.py
       hash: md5
-      md5: b67717703cbc737e2d1885094fc0fd05
-      size: 11089
+      md5: 47f03e763b8ff49f85c8619934c0ebc4
+      size: 10363
     params:
       params.yaml:
-        model_training.logistic_params:
+        model_training.grid_search:
+          cv: 5
+          scoring: f1
+          n_jobs: -1
+          verbose: 2
+          refit: true
+        model_training.logistic.fixed_params:
           C: 1.0
-          max_iter: 1000
           penalty: l2
-          solver: lbfgs
-        model_training.random_forest_params:
-          n_estimators: 100
-          max_depth: 20
-        model_training.svm_params:
+          solver: sag
+          max_iter: 2000
+          class_weight: balanced
+          random_state: 42
+        model_training.logistic.param_grid:
+          C:
+          - 0.001
+          - 0.01
+          - 0.1
+          - 1
+          - 10
+          - 100
+          penalty:
+          - l2
+          - l1
+          - elasticnet
+          solver:
+          - lbfgs
+          - liblinear
+          - sag
+          - saga
+          l1_ratio:
+          - 0
+          - 0.25
+          - 0.5
+          - 0.75
+          - 1
+        model_training.random_forest.fixed_params:
+          n_estimators: 50
+          max_depth: 10
+          min_samples_split: 5
+          class_weight: balanced_subsample
+          random_state: 42
+          n_jobs: -1
+        model_training.random_forest.param_grid:
+          n_estimators:
+          - 10
+          - 50
+          - 100
+          max_depth:
+          - 10
+          - 20
+          - None
+          min_samples_split:
+          - 5
+          - 50
+          - 100
+        model_training.svm.fixed_params:
           C: 1.0
           kernel: linear
+          probability: true
+          class_weight: balanced
+          random_state: 42
+        model_training.svm.param_grid:
+          C:
+          - 1.0
+          - 10.0
+          - 30.0
+          kernel:
+          - linear
+          - rbf
+          gamma:
+          - scale
+          - auto
     outs:
     - path: models/logistic_model.pkl
       hash: md5
-      md5: 0e2b878ade2cf8b75cb03cf002c7551a
-      size: 8832
+      md5: 1f26b303ec786f8bf9e90452274d7947
+      size: 9041
     - path: models/random_forest_model.pkl
       hash: md5
-      md5: c828bce778725b827e79e2257bf4e85b
-      size: 2027136
+      md5: c29a8ef05ce6857c21cbf159cdc58e13
+      size: 1737113
     - path: models/svm_model.pkl
       hash: md5
-      md5: db1eb072ec94e8268749cee1b2b422b3
-      size: 85779
+      md5: b9fc8abc5fe3b907c04fc2b6f869bc6e
+      size: 164867
+    - path: results/best_params_logistic.yaml
+      hash: md5
+      md5: eb1250d12997c02cf04b13c1f5c8d37c
+      size: 50
+    - path: results/best_params_random_forest.yaml
+      hash: md5
+      md5: 354d6ea0bfecef5b51c585a3e512c36d
+      size: 56
+    - path: results/best_params_svm.yaml
+      hash: md5
+      md5: e2e68c0b24f0ee18c49c23dc14e30b76
+      size: 36
+    - path: results/gridsearch/logistic_results.csv
+      hash: md5
+      md5: be2c6a018c08bade60c5694cf1721e3a
+      size: 88021
+    - path: results/gridsearch/random_forest_results.csv
+      hash: md5
+      md5: 69be2ffdcf69117f668b36bda199f06d
+      size: 6664
+    - path: results/gridsearch/svm_results.csv
+      hash: md5
+      md5: 03dcf6b2bc2c407d034b5e93e7c053be
+      size: 3565
   model_evaluation:
     cmd: python src/model_evaluation.py
     deps:
+    - path: data/feature
+      hash: md5
+      md5: 30195831ad383212b11e2b3448976569.dir
+      size: 462555
+      nfiles: 4
     - path: models
       hash: md5
-      md5: 4f1ce9ae3e40d20d5ff00c876debc032.dir
-      size: 10591071
+      md5: 37ec11853d7ff97207b9e8534c412b46.dir
+      size: 10380345
       nfiles: 13
     - path: src/model_evaluation.py
       hash: md5
-      md5: 31c87245fca3512cfc7fb55b87ff9b3e
-      size: 6057
+      md5: 20da6f5a22cbb8003949d307c101b538
+      size: 12360
+    params:
+      params.yaml:
+        model_training:
+          grid_search:
+            cv: 5
+            scoring: f1
+            n_jobs: -1
+            verbose: 2
+            refit: true
+          logistic:
+            fixed_params:
+              C: 1.0
+              penalty: l2
+              solver: sag
+              max_iter: 2000
+              class_weight: balanced
+              random_state: 42
+            param_grid:
+              C:
+              - 0.001
+              - 0.01
+              - 0.1
+              - 1
+              - 10
+              - 100
+              penalty:
+              - l2
+              - l1
+              - elasticnet
+              solver:
+              - lbfgs
+              - liblinear
+              - sag
+              - saga
+              l1_ratio:
+              - 0
+              - 0.25
+              - 0.5
+              - 0.75
+              - 1
+          svm:
+            fixed_params:
+              C: 1.0
+              kernel: linear
+              probability: true
+              class_weight: balanced
+              random_state: 42
+            param_grid:
+              C:
+              - 1.0
+              - 10.0
+              - 30.0
+              kernel:
+              - linear
+              - rbf
+              gamma:
+              - scale
+              - auto
+          random_forest:
+            fixed_params:
+              n_estimators: 50
+              max_depth: 10
+              min_samples_split: 5
+              class_weight: balanced_subsample
+              random_state: 42
+              n_jobs: -1
+            param_grid:
+              n_estimators:
+              - 10
+              - 50
+              - 100
+              max_depth:
+              - 10
+              - 20
+              - None
+              min_samples_split:
+              - 5
+              - 50
+              - 100
     outs:
-    - path: results/evaluation_results.yaml
+    - path: results/evaluation_results.json
       hash: md5
-      md5: d5d409131232b3526549a0b332a96a40
-      size: 547
+      md5: ce5f349408b6d20e6fc20b8b3e021743
+      size: 4467
+    - path: results/evaluation_summary.md
+      hash: md5
+      md5: 1650e72562dbbe8283f33c67e927efb9
+      size: 375
+    - path: results/evaluation_summary.yaml
+      hash: md5
+      md5: 9b0fcf38ea2e719a83194b761b46bb36
+      size: 2026
